@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
-
+/****DIEGO******/
 int repo_existe();
 int crear_carpeta_repo();
 void crear_archivos_control();
@@ -94,3 +95,52 @@ void ugit_init()
     crear_archivos_control();
     printf("Inicializado repositorio uGit vacío\n");
 }
+/***DIEGO****/
+ /*******CATALINA*******/
+ void ugit_commit(const char *mensaje){
+    FILE *staging = fopen(".ugit/staging_area.txt", "r");
+    if (staging == NULL){
+        printf("No existe un staging. Ejecuta ugit init.");
+        return;
+    }
+
+    fseek(staging, 0, SEEK_END);
+    long size = ftell(staging);
+    if (size == 0){
+        printf("No hay archivos en el staging area para commitear.\n");
+        fclose(staging);
+        return;
+    }
+    rewind(staging);
+    //Abrir commits.txt para agregar el nuevo commit
+    FILE *comits = fopen(".ugit/commits.txt", "a");
+    if (comits == NULL){
+        printf("Error al abrir commits.txt\n");
+        fclose(staging);
+        return;
+    }
+    //contar commits previos para asignar ID
+    FILE *commits_read = fopen(".ugit/commits.txt", "r");
+    int commit_id = 1;
+    if (commits_read){
+        char linea[256];
+        while(fgets(linea,sizeof(linea),commits_read)){
+            if(strncmp(linea,"commit", 7) == 0){
+                commit_id++;
+            }
+        }
+        fclose(commits_read);
+    }
+    //fecha y hora
+    time_t now = time(NULL);
+    struct tm *t = localtime(&now);
+    char fecha[64];
+    strftime(fecha,sizeof(fecha), "%Y-%m-%d %H:%M:%S", t);
+    //encabezado del commit
+    fprintf(comits, "commit %d\n", commit_id);
+    fprintf(comits, "Date: %s\n", fecha);
+    fprintf(comits, "Message: %s\n", mensaje);
+    fprintf(comits, "Files:\n");
+    //Estoy ocupada continuo despues
+
+ }
