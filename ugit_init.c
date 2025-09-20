@@ -8,6 +8,7 @@ int repo_existe();
 int crear_carpeta_repo();
 void crear_archivos_control();
 void ugit_init();
+void ugit_commit(const char *mensaje);
 
 int main(int argc, char *argv[]) 
 {
@@ -23,6 +24,15 @@ int main(int argc, char *argv[])
     {
         ugit_init();
     } 
+
+    //commit:uso:ugit commit -m "mensaje"
+    else if (strcmp(argv[1], "commit") == 0){
+        if(argc < 4 || strcmp(argv[2], "-m") != 0){
+            printf("ugit commit");
+        }else{
+            ugit_commit(argv[3]);
+        }
+    }
 
     // Si se escribe un argumento que no se reconoce, se le indica al usuario
     else 
@@ -113,8 +123,8 @@ void ugit_init()
     }
     rewind(staging);
     //Abrir commits.txt para agregar el nuevo commit
-    FILE *comits = fopen(".ugit/commits.txt", "a");
-    if (comits == NULL){
+    FILE *commits = fopen(".ugit/commits.txt", "a");
+    if (commits == NULL){
         printf("Error al abrir commits.txt\n");
         fclose(staging);
         return;
@@ -137,10 +147,28 @@ void ugit_init()
     char fecha[64];
     strftime(fecha,sizeof(fecha), "%Y-%m-%d %H:%M:%S", t);
     //encabezado del commit
-    fprintf(comits, "commit %d\n", commit_id);
-    fprintf(comits, "Date: %s\n", fecha);
-    fprintf(comits, "Message: %s\n", mensaje);
-    fprintf(comits, "Files:\n");
-    //Estoy ocupada continuo despues
+    fprintf(commits, "commit %d\n", commit_id);
+    fprintf(commits, "Date: %s\n", fecha);
+    fprintf(commits, "Message: %s\n", mensaje);
+    fprintf(commits, "Files:\n");
+    //Escribe cada archivo que estaba en staging 
+    char archivo[256];
+    while(fgets(archivo,sizeof(archivo),staging)){
+        //Eliminar salto de linea final
+        archivo[strcspn(archivo,"\n")] = 0;
+        if(strlen(archivo) == 0) continue; //salta lineas vacias
+        fprintf(commits,"%s\n", archivo);
+
+    }
+    //separador para facilitar lectura
+    fprintf(commits, "---\n");
+
+    fclose(staging);
+    fclose(commits);
+
+    //vaciar staging_area.txt
+    FILE *clear = fopen(".ugit/staging_area.txt", "w");
+    if(clear) fclose(clear);
+    printf("[master] commit %d - %s\n",commit_id,mensaje);
 
  }
